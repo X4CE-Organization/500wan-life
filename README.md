@@ -88,7 +88,7 @@
 ## 技术备注
 
 - 对话请求发送到 `https://api.deepseek.com/chat/completions`；
-- 模型默认 `deepseek-v4-flash`，可在 Key 页切换 `deepseek-v4-pro`；
+- 模型默认 `deepseek-flash`（官方现名，旧的 `deepseek-v4-flash` 会自动映射），可在 Key 页切换 `deepseek-v4-pro`；
 - 请求显式关闭思考模式（`thinking: disabled`），回复更快更省；
 - API Key、模型选择保存在浏览器本地，刷新页面不丢失；
 - AI 使用结构化标记与前端协作：
