@@ -61,6 +61,12 @@
       period: 'worldwar',
       desc: '1939年 · 全球战火',
       era: '1939年09月01日'
+    },
+    'xiuxian': {
+      title: '修仙人生',
+      type: 'cultivation',
+      desc: '仙道漫漫 · 一念长生',
+      assets: '灵石 0 枚 | 柴刀 1 把 | 铜板 7 枚 | 寿元 80 岁'
     }
   };
 
@@ -76,7 +82,7 @@
   let history = [];
   let busy = false;
   let blockCount = 0;
-  let stats = { date: '', year: null, age: null, health: 100, cash: null, population: null, military: null, finance: null, financeUnit: '', examScore: null, countryName: '' };
+  let stats = { date: '', year: null, age: null, health: 100, cash: null, population: null, military: null, finance: null, financeUnit: '', examScore: null, countryName: '', stones: null, realm: '', lifespan: null };
   let chartData = [];
   let milestones = [];
   let lifeAchievements = [];
@@ -90,6 +96,41 @@
   function openingText() {
     const g = GAMES[gameId];
     if (g.type === 'war') return '';
+    if (g.type === 'cultivation') {
+      return '时间：2027年01月01日\n' +
+        '资产：' + g.assets + '\n' +
+        '情况：' + (playerName ? playerName + '，' : '') + '你刚满16岁，是青云山下柳溪村的一个凡人少年，今日清晨照常背着柴刀上山砍柴。你体内只有一丝微弱的灵力，修为：练气一层，寿元80岁，身上只有七个铜板。山道尽头云雾深处便是青云山，听说那里有仙师收徒。你抬头看了一眼，柴刀在背，天光正好，这是你踏上仙途的第一天，接下来你想做什么？';
+    }
+    if (g.type === 'cultivation') {
+      return (
+        '你是一个名为“修仙人生”的沉浸式修仙模拟游戏。玩家从16岁凡人开始，用对话走完一生，从练气、筑基、金丹、元婴、化神一路向上，直至飞升或陨落。你保持冷静、客观、有沉浸感的叙事风格，用词带仙侠气但不堆砌辞藻。\n\n' +
+        '【最高优先级铁律】严禁充数：选项按钮必须包含实际内容——具体的功法、丹药、法宝、宗门、地点、行动方案等；绝对不能写“继续”“继续当前方向”“换一种思路”“暂时观望”这类充数按钮。每轮必须至少给出一个真实、具体、可执行的选项，宁缺毋滥，绝不硬凑。\n\n' +
+        '游戏规则：\n' +
+        '1. 起始状态：16岁，2027年1月1日，青云山下柳溪村凡人，练气一层，寿元80岁，只有柴刀和几个铜板。\n' +
+        '2. 时间推进：每次行动后时间推进几天、几月或几年，按行动性质合理决定；修仙无岁月，闭关、赶路、斗法、渡劫可推进较长时间。\n' +
+        '3. 输出格式：每次回复严格按以下格式：\n' +
+        '时间：XXXX年XX月XX日\n' +
+        '资产：（灵石、丹药、法宝、功法、寿元等明细）\n' +
+        '情况：（行动结果、修为变化、机缘、争斗、身体状况等，按句子分行）\n' +
+        '4. 修为与境界：境界依次为 练气（一至九层）→ 筑基 → 金丹 → 元婴 → 化神 → 炼虚 → 合体 → 大乘 → 渡劫 → 飞升。每次突破必须有合理过程（瓶颈、丹药、机缘、心魔、天劫），不得随意跳过。可在“情况”中输出 修为：练气三层 这样的境界，以及 健康：0-100 数值。\n' +
+        '5. 寿元与死亡：寿元随境界提升而增加（练气约80-120岁，筑基约200岁，金丹约500岁，元婴约1000岁，化神约2000岁，之后更长）。寿元耗尽、重伤不治、心魔反噬、渡劫失败、被仇家所杀都会死亡。何时死亡由你根据年龄、修为、伤势、心境综合判定，绝不固定日期。寿元临近时要在“情况”中提示。\n' +
+        '6. 选择交互：每次回复必须输出至少1个具体 [OPTION: 选项内容] 标记（数量不限但绝不能为0），选项要贴合当前剧情（如“拜入青云宗外门”“去坊市买一枚聚气丹”“独自进后山猎妖”“闭关冲击练气三层”）；严禁使用“继续当前方向”“换一种思路”“暂时观望”“继续”等泛泛占位选项；严禁在选项前写引导语，直接输出 [OPTION: 具体选项]。\n' +
+        '7. 随机与机缘：灵根、机缘、奇遇、夺宝、仇杀、宗门任务都要合理随机模拟；不同选择会带来不同因果，善恶有报但不强行说教。\n' +
+        '8. 游戏结束（强烈要求）：玩家死亡（寿元耗尽、重伤、心魔、渡劫失败、被杀等）或成功飞升时游戏结束，必须在回复末尾单独一行输出 [GAME_OVER] 标记，并给出修仙总结（至少各一条 [ACHIEVEMENT: 成就描述] 与 [REGRET: 遗憾描述]，每行一条，可多条，缺一不可）。\n' +
+        '9. 劝阻处理（强烈要求）：若玩家执意进行危险或出格的行为（自杀、自爆金丹、入魔、作死等），AI最多只能劝阻一轮。劝阻轮必须把关于“坚持原决定”的选项作为最后一个 [OPTION:] 输出（关键词：坚持、仍然、依然、执意、我就要、不改变），其余开解选项排在它前面；若玩家再次坚持，禁止任何形式劝阻，直接让事件发生并承担后果，若因此死亡或失败，按第8条输出 [GAME_OVER]。\n' +
+        '10. 信息询问：当玩家的行动需要补充信息（例如拜师需要选择宗门、炼丹需要确定丹方、斗法需要确定对手等），必须先向玩家询问这些信息，等玩家回答后再继续，绝对不要替玩家默认、猜测或编造。询问时必须用 [ASK: 具体问题] 标记逐行列出需要回答的信息，也可用 [OPTION:] 给出常见选项；在玩家回答完之前，不得推进该行动的结果。\n\n' +
+        '格式要求：\n' +
+        '- 时间中的月和日使用两位数字（如2027年01月05日）。\n' +
+        '- 灵石、丹药等数量用阿拉伯数字。\n' +
+        '- 禁止用数字编号列表（如 1. 2. 3.）来写选项，所有选项一律用 [OPTION: 选项内容] 标记逐行输出。\n' +
+        '- 禁止使用任何 Markdown 标记（星号、井号、反引号、横线列表符号等），一律纯文本。\n\n' +
+        '重要约束：\n' +
+        '- 回复末尾不加任何署名、落款、横线或游戏名称。\n' +
+        '- 始终保持角色扮演，不打破第四面墙。\n' +
+        '- 叙事简洁清晰，有沉浸感。' +
+        (playerName ? '\n\n玩家信息：姓名 ' + playerName + '。请在叙事中自然地用这个名字称呼玩家。' : '')
+      );
+    }
     if (g.type === 'exam') {
       return '时间：2027年02月27日\n' +
         '资产：' + g.assets + '\n' +
@@ -393,6 +434,7 @@
   function startAgeOf() {
     const g = GAMES[gameId];
     if (g.type === 'exam') return 18;
+    if (g.type === 'cultivation') return 16;
     return 20;
   }
 
@@ -409,6 +451,14 @@
     if (GAMES[gameId].type === 'exam') {
       const examM = text.match(/(?:模考|模拟考|模拟考试|统考)?总分[^\d]{0,8}(\d{2,3})\s*分/);
       if (examM) stats.examScore = parseInt(examM[1], 10);
+    }
+    if (GAMES[gameId].type === 'cultivation') {
+      const stoneM = text.match(/灵石[^\d]{0,6}(\d+)/);
+      if (stoneM) stats.stones = parseInt(stoneM[1], 10);
+      const realmM = text.match(/修为[：:]\s*([^\n，。；]+)/);
+      if (realmM) stats.realm = realmM[1].trim();
+      const lifeM = text.match(/寿元[^\d]{0,6}(\d+)/);
+      if (lifeM) stats.lifespan = parseInt(lifeM[1], 10);
     }
     const healthM = text.match(/健康[：:]\s*(\d+)/);
     if (healthM) stats.health = Math.max(0, Math.min(100, parseInt(healthM[1], 10)));
@@ -604,15 +654,19 @@
     $('dash-person-name').textContent = playerName || '无名';
     const isWar = GAMES[gameId].type === 'war';
     const isExam = GAMES[gameId].type === 'exam';
+    const isCult = GAMES[gameId].type === 'cultivation';
     if (isWar) {
       $('dash-age-health').textContent = '年龄 ' + (stats.age !== null ? stats.age + ' 岁' : '—');
+    } else if (isCult) {
+      $('dash-age-health').textContent = '年龄 ' + (stats.age !== null ? stats.age + ' 岁' : '—') + ' · 寿元 ' + (stats.lifespan !== null ? stats.lifespan + ' 岁' : '—') + ' · 健康 ' + stats.health;
+      $('dash-health-bar').style.width = stats.health + '%';
     } else {
       $('dash-age-health').textContent = '年龄 ' + (stats.age !== null ? stats.age + ' 岁' : '—') + ' · 健康 ' + stats.health;
       $('dash-health-bar').style.width = stats.health + '%';
     }
     $('dash-country').style.display = isWar ? '' : 'none';
     $('dash-money-card').style.display = isWar ? 'none' : '';
-    $('dash-score-card').style.display = isExam ? '' : 'none';
+    $('dash-score-card').style.display = (isExam || isCult) ? '' : 'none';
     if (isWar) {
       $('dash-assets-label').textContent = '财政';
       $('dash-chart-label').textContent = '财政走势';
@@ -628,13 +682,19 @@
       $('dash-cash').textContent = fmtMoney(stats.cash);
       $('dash-score-card').querySelector('.dash-label').textContent = gaokaoScore ? '高考总分' : '最近总分';
       $('dash-exam-score').textContent = gaokaoScore ? gaokaoScore + ' 分' : (stats.examScore !== null ? stats.examScore + ' 分' : '—');
+    } else if (isCult) {
+      $('dash-assets-label').textContent = '灵石';
+      $('dash-chart-label').textContent = '灵石走势';
+      $('dash-cash').textContent = stats.stones === null ? '— 枚' : stats.stones + ' 枚';
+      $('dash-score-card').querySelector('.dash-label').textContent = '修为';
+      $('dash-exam-score').textContent = stats.realm || '练气一层';
     } else {
       $('dash-assets-label').textContent = '资产';
       $('dash-chart-label').textContent = '资产走势';
       $('dash-cash').textContent = fmtMoney(stats.cash);
     }
     if (stats.year !== null) {
-      const chartVal = isWar ? stats.finance : (isExam ? stats.examScore : stats.cash);
+      const chartVal = isWar ? stats.finance : (isExam ? stats.examScore : (isCult ? stats.stones : stats.cash));
       if (chartVal !== null && chartVal !== undefined && !isNaN(chartVal)) {
         chartData.push({ label: stats.date, value: chartVal });
       }
@@ -650,18 +710,25 @@
   function initDashboardMode() {
     const isWar = GAMES[gameId].type === 'war';
     const isExam = GAMES[gameId].type === 'exam';
+    const isCult = GAMES[gameId].type === 'cultivation';
     $('dash-country').style.display = isWar ? '' : 'none';
     $('dash-money-card').style.display = isWar ? 'none' : '';
-    $('dash-score-card').style.display = isExam ? '' : 'none';
-    $('dash-assets-label').textContent = isWar ? '财政' : (isExam ? '现金' : '资产');
-    $('dash-chart-label').textContent = isWar ? '财政走势' : (isExam ? '考试总分走势' : '资产走势');
+    $('dash-score-card').style.display = (isExam || isCult) ? '' : 'none';
+    $('dash-assets-label').textContent = isWar ? '财政' : (isExam ? '现金' : (isCult ? '灵石' : '资产'));
+    $('dash-chart-label').textContent = isWar ? '财政走势' : (isExam ? '考试总分走势' : (isCult ? '灵石走势' : '资产走势'));
     if (isExam) {
       $('dash-score-card').querySelector('.dash-label').textContent = gaokaoScore ? '高考总分' : '最近总分';
       $('dash-exam-score').textContent = gaokaoScore ? gaokaoScore + ' 分' : '—';
     }
+    if (isCult) {
+      $('dash-score-card').querySelector('.dash-label').textContent = '修为';
+      $('dash-exam-score').textContent = stats.realm || '练气一层';
+    }
     $('dash-health-bar').style.display = isWar ? 'none' : '';
     if (isWar) {
       $('dash-age-health').textContent = '年龄 —';
+    } else if (isCult) {
+      $('dash-age-health').textContent = '年龄 — · 寿元 — · 健康 —';
     } else {
       $('dash-age-health').textContent = '年龄 — · 健康 —';
     }
@@ -825,6 +892,9 @@
     }
     if (GAMES[gameId].type === 'exam') {
       return ['制定寒假学习计划，每天固定刷题', '先休息几天，调整好状态', '买几本教辅资料提前预习', '找班主任聊聊选科方向'];
+    }
+    if (GAMES[gameId].type === 'cultivation') {
+      return ['去村口打听青云宗招收外门弟子的消息', '到后山猎几只野兽换铜板', '采几株常见草药去坊市碰运气', '找个僻静处打坐练习吐纳'];
     }
     return ['先买一套房子安顿下来', '先拿一部分钱投资股市', '先环游世界见见世面', '先存起来按兵不动'];
   }
@@ -1080,7 +1150,7 @@
   function enterGame() {
     if (!gameId || !GAMES[gameId]) gameId = '500wan';
     const g = GAMES[gameId];
-    stats = { date: '', year: null, age: null, health: 100, cash: null, population: null, military: null, finance: null, financeUnit: '', examScore: null, countryName: '' };
+    stats = { date: '', year: null, age: null, health: 100, cash: null, population: null, military: null, finance: null, financeUnit: '', examScore: null, countryName: '', stones: null, realm: '', lifespan: null };
     chartData = [];
     milestones = [];
     lifeAchievements = [];
